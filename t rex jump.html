@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <title>Advanced Mario Game</title>
+</head>
+<body>
+    <canvas id="marioCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("marioCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const mario = {
+            x: 50,
+            y: canvas.height - 50,
+            width: 40,
+            height: 60,
+            color: "red",
+            speed: 5,
+            isJumping: false,
+            jumpHeight: 100,
+            jumpCount: 0,
+            canDoubleJump: true
+        };
+
+        let obstacles = [];
+
+        let score = 0;
+        let time = 0;
+
+        function drawMario() {
+            ctx.fillStyle = mario.color;
+            ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+        }
+
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = obstacle.color;
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+
+        function update() {
+            // Aktualizacja logiki gry
+            if (mario.isJumping) {
+                mario.y -= mario.speed;
+                mario.jumpCount += mario.speed;
+
+                // Sprawdź kolizję z sufitem
+                if (mario.y < 0) {
+                    mario.isJumping = false;
+                    mario.jumpCount = 0;
+                }
+
+                if (mario.jumpCount >= mario.jumpHeight) {
+                    mario.isJumping = false;
+                    mario.canDoubleJump = true;
+                }
+            } else if (mario.y < canvas.height - mario.height) {
+                mario.y += mario.speed;
+            }
+
+            // Aktualizacja przeszkód
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= obstacles[i].speed;
+
+                // Sprawdź kolizję z przeszkodą
+                if (
+                    mario.x < obstacles[i].x + obstacles[i].width &&
+                    mario.x + mario.width > obstacles[i].x &&
+                    mario.y < obstacles[i].y + obstacles[i].height &&
+                    mario.y + mario.height > obstacles[i].y
+                ) {
+                    // Kolizja! Tutaj możesz dodać odpowiednie działania w przypadku zderzenia.
+                    alert("Game Over! Score: " + score);
+                    resetGame();
+                }
+
+                // Zdobywanie punktów za przejście przeszkody
+                if (obstacles[i].x + obstacles[i].width < mario.x && !obstacles[i].scored) {
+                    score++;
+                    obstacles[i].scored = true;
+                }
+            }
+
+            // Dodawanie nowych przeszkód losowo
+            if (Math.random() < 0.02) {
+                const obstacle = {
+                    x: canvas.width,
+                    y: canvas.height - Math.floor(Math.random() * 50),
+                    width: 30,
+                    height: 30,
+                    color: "blue",
+                    speed: 5,
+                    scored: false
+                };
+
+                obstacles.push(obstacle);
+            }
+
+            // Aktualizacja czasu gry
+            time++;
+        }
+
+        function draw() {
+            // Czyszczenie ekranu
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Rysowanie postaci
+            drawMario();
+
+            // Rysowanie przeszkód
+            for (let i = 0; i < obstacles.length; i++) {
+                drawObstacle(obstacles[i]);
+            }
+
+            // Wyświetlanie informacji
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+            ctx.fillText("Time: " + time, 10, 60);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            mario.y = canvas.height - 50;
+            obstacles = [];
+            score = 0;
+            time = 0;
+        }
+
+        // Obsługa klawiszy
+        window.addEventListener("keydown", function (e) {
+            if (e.code === "Space" && !mario.isJumping) {
+                mario.isJumping = true;
+                mario.jumpCount = 0;
+            } else if (e.code === "Space" && mario.canDoubleJump) {
+                // Podwójny skok
+                mario.isJumping = true;
+                mario.jumpCount = 0;
+                mario.canDoubleJump = false;
+            }
+        });
+
+        // Rozpocznij pętlę gry
+        gameLoop();
+    </script>
+<h9> beta </h9>
+</body>
+</html>
